@@ -1,7 +1,7 @@
 {
   "name": "sharedtorrent",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Un cliente para organizar los torrents files y compartilos de manera mas sencilla.",
   "main": "./lib/sharedtorrent",
   "bin": {
@@ -14,7 +14,10 @@
   "license": "MIT",
   "dependencies": {
     "colors": "^1.1.2",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "moment": "^2.15.2",
+    "moment-timezone": "^0.5.9",
+    "xml": "^1.0.1"
   },
   "devDependencies": {},
   "repository": {
