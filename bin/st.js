@@ -1,11 +1,13 @@
 const
-	colors = require("colors/safe");
+	colors = require("colors/safe"),
+	fs = require("fs"),
 	minimist = require( "minimist" ),
 	path = require("path"),
-	fs = require("fs"),
 	sharedtorrent = require("../lib/sharedtorrent").sharedtorrent;
 
 const log = console.log.bind(console);
+const toLower = (str) => str && String.prototype.toLowerCase.apply(str);
+const toUpper = (str) => str && String.prototype.toUpperCase.apply(str);
 
 const argv = minimist( process.argv.slice(2), {
 	"boolean": [
@@ -15,12 +17,14 @@ const argv = minimist( process.argv.slice(2), {
 	],
 	"default": {
 		"file": "sharedtorrent.json",
+		"output": ["rss", "xml"],
 	},
 	"alias": {
 		"h": "help",
 		"f": "file",
 		"V": "verbose",
 		"v": "version",
+		"o": "output",
 	},
 } );
 
@@ -70,18 +74,19 @@ const info = () => {
 	log(String("-").repeat(50));
 }
 
-const actionAddTorrent = (linkTorrent) => {
+const actionAddTorrent = (linkTorrent, e=sharedtorrent.from(preloadSharedTorrent())) => {
 	log(colors.yellow(`Add torrent link.`));
 	// sharedtorrent.init(FILE_SHAREDTORRENT, preloadSharedTorrent());
-
-	let e = sharedtorrent.from(preloadSharedTorrent());
 
 	e.addTorrent(linkTorrent);
 
 	makeSharedTorrent(e.toString());
 
 	log("update file " + colors.green(FILE_SHAREDTORRENT) + ":");
-	log(e.toString());
+	// log(e.toString());
+
+	actionExportRSS(void 0, e);
+	actionExportMarkdown(void 0, e);
 }
 
 const actionSetProp = (param, value = "") => {
@@ -103,10 +108,9 @@ const actionNoWork = () => {
 	log(`${colors.yellow("Sorry No Working")}`);
 }
 
-const actionCreateRSS = (SET_OUTFILE) => {
+const actionExportRSS = (SET_OUTFILE, e=sharedtorrent.from(preloadSharedTorrent())) => {
 	log(colors.yellow(`Create RSS.`));
 
-	let e = sharedtorrent.from(preloadSharedTorrent());
 	const OUTFILE = path.resolve(SET_OUTFILE || `${e.body.title.replace(/\s/g,".")}.xml`);
 
 	// makeSharedTorrent(e.toXML());
@@ -119,10 +123,9 @@ const actionCreateRSS = (SET_OUTFILE) => {
 	fs.writeFileSync(OUTFILE, e.toXML());
 }
 
-const actionCreateMarkdown = (SET_OUTFILE) => {
+const actionExportMarkdown = (SET_OUTFILE, e=sharedtorrent.from(preloadSharedTorrent())) => {
 	log(colors.yellow(`Create Markdown file.`));
 
-	let e = sharedtorrent.from(preloadSharedTorrent());
 	const OUTFILE = path.resolve(SET_OUTFILE || `${e.body.title.replace(/\s/g,".")}.md`);
 
 	// makeSharedTorrent(e.toXML());
@@ -159,15 +162,17 @@ const actionList = () => {
 }
 
 info();
-switch (String(argv["_"][0]).toLowerCase()) {
+
+
+switch (toLower(argv["_"][0])) {
 case "init": actionInit(); break;
 case "inspect": actionInspect(); break;
 case "add": actionAddTorrent(argv["_"][1]); break;
-case "set": actionSetProp(String(argv["_"][1]).toLowerCase(), argv["_"].slice(2).join(" ")); break;
-case "xml": actionCreateRSS(argv["_"][1]); break;
-case "rss": actionCreateRSS(argv["_"][1]); break;
+case "set": actionSetProp(toLower(argv["_"][1]), argv["_"].slice(2).join(" ")); break;
+case "xml":
+case "rss": actionExportRSS(argv["_"][1]); break;
 case "md":
-case "markdown": actionCreateMarkdown(argv["_"][1]); break;
+case "markdown": actionExportMarkdown(argv["_"][1]); break;
 case "import": actionImport(argv["_"][1]); break;
 case "ls":
 case "list": actionList(); break;
